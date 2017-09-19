@@ -6,14 +6,14 @@ uses
   SysUtils, Classes, Pipes;
 
 type
-  TPipeClientDisconnectCallback = procedure(aPipe: Cardinal); stdcall;
-  TPipeClientErrorCallback      = procedure(aPipe: Cardinal;
-                                            aPipeContext: ShortInt;
-                                            aErrorCode: Integer); stdcall;
-  TPipeClientMessageCallback    = procedure(aPipe: Cardinal;
-                                            aMsg: PChar); stdcall;
-  TPipeClientSentCallback       = procedure(aPipe: Cardinal;
-                                            aSize: Cardinal); stdcall;
+  TPCDisconnectCb = procedure(aPipe: Cardinal) of object; stdcall;
+  TPCErrorCb      = procedure(aPipe: Cardinal;
+                              aPipeContext: ShortInt;
+                              aErrorCode: Integer) of object; stdcall;
+  TPCMessageCb    = procedure(aPipe: Cardinal;
+                              aMsg: PWideChar) of object; stdcall;
+  TPCSentCb       = procedure(aPipe: Cardinal;
+                              aSize: Cardinal) of object; stdcall;
 
   TTBUNP_ClientPipe = class(TObject)
     private
@@ -24,18 +24,18 @@ type
       procedure OPCMCB(aSender: TObject; aPipe: HPIPE; aStream: TStream);
       procedure OPCSCB(aSender: TObject; aPipe: HPIPE; aSize: Cardinal);
     public
-      OnPipeClientDisconnectCallback: TPipeClientDisconnectCallback;
-      OnPipeClientErrorCallback:      TPipeClientErrorCallback;
-      OnPipeClientMessageCallback:    TPipeClientMessageCallback;
-      OnPipeClientSentCallback:       TPipeClientSentCallback;
+      OnPipeClientDisconnectCallback: TPCDisconnectCb;
+      OnPipeClientErrorCallback:      TPCErrorCb;
+      OnPipeClientMessageCallback:    TPCMessageCb;
+      OnPipeClientSentCallback:       TPCSentCb;
       constructor Create;
       destructor Destroy; override;
       function Connect: Boolean; overload;
-      function Connect(aPipeName: string): Boolean; overload;
-      function ConnectRemote(aServername: string): Boolean; overload;
-      function ConnectRemote(aServername, aPipeName: string): Boolean; overload;
+      function Connect(aPipeName: PWideChar): Boolean; overload;
+      function ConnectRemote(aServername: PWideChar): Boolean; overload;
+      function ConnectRemote(aServername, aPipeName: PWideChar): Boolean; overload;
       procedure Disconnect;
-      function Send(const aMsg: PChar): Boolean;
+      function Send(aMsg: PWideChar): Boolean;
       function GetPipeId: HPIPE;
   end;
 
@@ -51,6 +51,7 @@ end;
 
 destructor TTBUNP_ClientPipe.Destroy;
 begin
+  // Call local method Disconnect, as it disconnects and frees the resource
   Disconnect;
 end;
 
@@ -70,14 +71,12 @@ begin
 
   Result := FPipeClient.Connect(2000, True);
 
+  // We must manually cleanup to prevent unexpected behaviour
   if not Result then
-  begin
-    FPipeClient.Disconnect;
-    FreeAndNil(FPipeClient);
-  end;
+    Disconnect;
 end;
 
-function TTBUNP_ClientPipe.Connect(aPipeName: string): Boolean;
+function TTBUNP_ClientPipe.Connect(aPipeName: PWideChar): Boolean;
 begin
   if FPipeClient <> nil then
   begin
@@ -86,7 +85,7 @@ begin
   end;
 
   FPipeClient                  := TPipeClient.CreateUnowned;
-  FPipeClient.PipeName         := aPipeName;
+  FPipeClient.PipeName         := StrPas(aPipeName);
   FPipeClient.OnPipeDisconnect := OPCDCB;
   FPipeClient.OnPipeError      := OPCECB;
   FPipeClient.OnPipeMessage    := OPCMCB;
@@ -94,14 +93,12 @@ begin
 
   Result := FPipeClient.Connect(2000, True);
 
+  // We must manually cleanup to prevent unexpected behaviour
   if not Result then
-  begin
-    FPipeClient.Disconnect;
-    FreeAndNil(FPipeClient);
-  end;
+    Disconnect;
 end;
 
-function TTBUNP_ClientPipe.ConnectRemote(aServername: string): Boolean;
+function TTBUNP_ClientPipe.ConnectRemote(aServername: PWideChar): Boolean;
 begin
   if FPipeClient <> nil then
   begin
@@ -110,7 +107,7 @@ begin
   end;
 
   FPipeClient                  := TPipeClient.CreateUnowned;
-  FPipeClient.ServerName       := aServerName;
+  FPipeClient.ServerName       := StrPas(aServerName);
   FPipeClient.OnPipeDisconnect := OPCDCB;
   FPipeClient.OnPipeError      := OPCECB;
   FPipeClient.OnPipeMessage    := OPCMCB;
@@ -118,14 +115,12 @@ begin
 
   Result := FPipeClient.Connect(2000, True);
 
+  // We must manually cleanup to prevent unexpected behaviour
   if not Result then
-  begin
-    FPipeClient.Disconnect;
-    FreeAndNil(FPipeClient);
-  end;
+    Disconnect;
 end;
 
-function TTBUNP_ClientPipe.ConnectRemote(aServername, aPipeName: string): Boolean;
+function TTBUNP_ClientPipe.ConnectRemote(aServername, aPipeName: PWideChar): Boolean;
 begin
   if FPipeClient <> nil then
   begin
@@ -134,8 +129,8 @@ begin
   end;
 
   FPipeClient                  := TPipeClient.CreateUnowned;
-  FPipeClient.ServerName       := aServerName;
-  FPipeClient.PipeName         := aPipeName;
+  FPipeClient.ServerName       := StrPas(aServerName);
+  FPipeClient.PipeName         := StrPas(aPipeName);
   FPipeClient.OnPipeDisconnect := OPCDCB;
   FPipeClient.OnPipeError      := OPCECB;
   FPipeClient.OnPipeMessage    := OPCMCB;
@@ -143,11 +138,9 @@ begin
 
   Result := FPipeClient.Connect(2000, True);
 
+  // We must manually cleanup to prevent unexpected behaviour
   if not Result then
-  begin
-    FPipeClient.Disconnect;
-    FreeAndNil(FPipeClient);
-  end;
+    Disconnect;
 end;
 
 procedure TTBUNP_ClientPipe.Disconnect;
@@ -159,7 +152,7 @@ begin
   FreeAndNil(FPipeClient);
 end;
 
-function TTBUNP_ClientPipe.Send(const aMsg: PChar): Boolean;
+function TTBUNP_ClientPipe.Send(aMsg: PWideChar): Boolean;
 begin
   if (FPipeClient = nil) or
      (not FPipeClient.Connected) or
@@ -194,17 +187,15 @@ procedure TTBUNP_ClientPipe.OPCECB(aSender: TObject; aPipe: HPIPE;
                                    aErrorCode: Integer);
 begin
   if Assigned(OnPipeClientErrorCallback) then
-    OnPipeClientErrorCallback(
-      Cardinal(aPipe),
-      ShortInt(aPipeContext),
-      aErrorCode
-    );
+    OnPipeClientErrorCallback(Cardinal(aPipe),
+                              ShortInt(aPipeContext),
+                              aErrorCode);
 end;
 
 procedure TTBUNP_ClientPipe.OPCMCB(aSender: TObject; aPipe: HPIPE;
                                    aStream: TStream);
 var
-  msg: string;
+  msg: WideString;
 begin
   if Assigned(OnPipeClientMessageCallback) then
   begin
@@ -212,7 +203,7 @@ begin
     aStream.Position := 0;
     aStream.Read(msg[1], aStream.Size);
 
-    OnPipeClientMessageCallback(Cardinal(aPipe), PChar(msg));
+    OnPipeClientMessageCallback(Cardinal(aPipe), PWideChar(msg));
   end;
 end;
 

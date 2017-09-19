@@ -6,15 +6,15 @@ uses
   SysUtils, Classes, Pipes;
 
 type
-  TPipeServerConnectCallback    = procedure(aPipe: Cardinal); stdcall;
-  TPipeServerDisconnectCallback = procedure(aPipe: Cardinal); stdcall;
-  TPipeServerErrorCallback      = procedure(aPipe: Cardinal;
-                                            aPipeContext: ShortInt;
-                                            aErrorCode: Integer); stdcall;
-  TPipeServerMessageCallback    = procedure(aPipe: Cardinal;
-                                            aMsg: PChar); stdcall;
-  TPipeServerSentCallback       = procedure(aPipe: Cardinal;
-                                            aSize: Cardinal); stdcall;
+  TPSConnectCb    = procedure(aPipe: Cardinal) of object; stdcall;
+  TPSDisconnectCb = procedure(aPipe: Cardinal) of object; stdcall;
+  TPSErrorCb      = procedure(aPipe: Cardinal;
+                              aPipeContext: ShortInt;
+                              aErrorCode: Integer) of object; stdcall;
+  TPSMessageCb    = procedure(aPipe: Cardinal;
+                              aMsg: PWideChar) of object; stdcall;
+  TPSSentCb       = procedure(aPipe: Cardinal;
+                              aSize: Cardinal) of object; stdcall;
 
   TTBUNP_ServerPipe = class(TObject)
     private
@@ -26,18 +26,18 @@ type
       procedure OPSMCB(aSender: TObject; aPipe: HPIPE; aStream: TStream);
       procedure OPSSCB(aSender: TObject; aPipe: HPIPE; aSize: Cardinal);
     public
-      OnPipeServerConnectCallback:    TPipeServerConnectCallback;
-      OnPipeServerDisconnectCallback: TPipeServerDisconnectCallback;
-      OnPipeServerErrorCallback:      TPipeServerErrorCallback;
-      OnPipeServerMessageCallback:    TPipeServerMessageCallback;
-      OnPipeServerSentCallback:       TPipeServerSentCallback;
+      OnPipeServerConnectCallback:    TPSConnectCb;
+      OnPipeServerDisconnectCallback: TPSDisconnectCb;
+      OnPipeServerErrorCallback:      TPSErrorCb;
+      OnPipeServerMessageCallback:    TPSMessageCb;
+      OnPipeServerSentCallback:       TPSSentCb;
       constructor Create;
       destructor Destroy; override;
       function Start: Boolean; overload;
-      function Start(aPipeName: string): Boolean; overload;
+      function Start(aPipeName: PWideChar): Boolean; overload;
       procedure Stop;
-      function Broadcast(const aMsg: PChar): Boolean;
-      function Send(aPipe: HPIPE; const aMsg: PChar): Boolean;
+      function Broadcast(aMsg: PWideChar): Boolean;
+      function Send(aPipe: HPIPE; aMsg: PWideChar): Boolean;
       function Disconnect(aPipe: HPIPE): Boolean;
       function GetClientCount: Integer;
   end;
@@ -82,7 +82,7 @@ begin
     FreeAndNil(FPipeServer);
 end;
 
-function TTBUNP_ServerPipe.Start(aPipeName: string): Boolean;
+function TTBUNP_ServerPipe.Start(aPipeName: PWideChar): Boolean;
 begin
   if FPipeServer <> nil then
   begin
@@ -92,7 +92,7 @@ begin
 
   FPipeServer                  := TPipeServer.CreateUnowned;
   FPipeServer.Active           := False;
-  FPipeServer.PipeName         := aPipeName;
+  FPipeServer.PipeName         := StrPas(aPipeName);
   FPipeServer.OnPipeConnect    := OPSCCB;
   FPipeServer.OnPipeDisconnect := OPSDCB;
   FPipeServer.OnPipeError      := OPSECB;
@@ -117,7 +117,7 @@ begin
   FreeAndNil(FPipeServer);
 end;
 
-function TTBUNP_ServerPipe.Broadcast(const aMsg: PChar): Boolean;
+function TTBUNP_ServerPipe.Broadcast(aMsg: PWideChar): Boolean;
 begin
   if (FPipeServer = nil) or
      (not FPipeServer.Active) or
@@ -127,10 +127,10 @@ begin
     Exit;
   end;
 
-  Result := FPipeServer.Broadcast(aMsg^, Length(aMsg) * SizeOf(Char));
+  Result := FPipeServer.Broadcast(aMsg^, Length(aMsg) * SizeOf(WideChar));
 end;
 
-function TTBUNP_ServerPipe.Send(aPipe: HPIPE; const aMsg: PChar): Boolean;
+function TTBUNP_ServerPipe.Send(aPipe: HPIPE; aMsg: PWideChar): Boolean;
 begin
   if (FPipeServer = nil) or
      (not FPipeServer.Active) or
@@ -140,7 +140,7 @@ begin
     Exit;
   end;
 
-  Result := FPipeServer.Write(aPipe, aMsg^, Length(aMsg) * SizeOf(Char));
+  Result := FPipeServer.Write(aPipe, aMsg^, Length(aMsg) * SizeOf(WideChar));
 end;
 
 function TTBUNP_ServerPipe.Disconnect(aPipe: HPIPE): Boolean;
@@ -185,17 +185,15 @@ procedure TTBUNP_ServerPipe.OPSECB(aSender: TObject; aPipe: HPIPE;
                                    aErrorCode: Integer);
 begin
   if Assigned(OnPipeServerErrorCallback) then
-    OnPipeServerErrorCallback(
-      Cardinal(aPipe),
-      ShortInt(aPipeContext),
-      aErrorCode
-    );
+    OnPipeServerErrorCallback(Cardinal(aPipe),
+                              ShortInt(aPipeContext),
+                              aErrorCode);
 end;
 
 procedure TTBUNP_ServerPipe.OPSMCB(aSender: TObject; aPipe: HPIPE;
                                    aStream: TStream);
 var
-  msg: string;
+  msg: WideString;
 begin
   if Assigned(OnPipeServerMessageCallback) then
   begin
@@ -203,7 +201,7 @@ begin
     aStream.Position := 0;
     aStream.Read(msg[1], aStream.Size);
 
-    OnPipeServerMessageCallback(Cardinal(aPipe), PChar(msg));
+    OnPipeServerMessageCallback(Cardinal(aPipe), PWideChar(msg));
   end;
 end;
 

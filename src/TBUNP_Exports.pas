@@ -10,33 +10,33 @@ uses
 procedure PipeServerInitialize; stdcall; export;
 procedure PipeServerDestroy; stdcall; export;
 function PipeServerStart: WordBool; stdcall; export;
-function PipeServerStartNamed(aPipeName: PChar): WordBool; stdcall; export;
+function PipeServerStartNamed(aPipeName: PWideChar): WordBool; stdcall; export;
 procedure PipeServerStop; stdcall; export;
-function PipeServerBroadcast(aMsg: PChar): WordBool; stdcall; export;
-function PipeServerSend(aPipe: Cardinal; aMsg: PChar): WordBool; stdcall; export;
+function PipeServerBroadcast(aMsg: PWideChar): WordBool; stdcall; export;
+function PipeServerSend(aPipe: Cardinal; aMsg: PWideChar): WordBool; stdcall; export;
 function PipeServerDisconnect(aPipe: Cardinal): WordBool; stdcall; export;
 function PipeServerGetClientCount: Integer; stdcall; export;
 { Declare Pipe Server Callback Registration Procedures }
-procedure RegisterOnPipeServerConnectCallback(const aCallback: TPipeServerConnectCallback); stdcall; export;
-procedure RegisterOnPipeServerDisconnectCallback(const aCallback: TPipeServerDisconnectCallback); stdcall; export;
-procedure RegisterOnPipeServerErrorCallback(const aCallback: TPipeServerErrorCallback); stdcall; export;
-procedure RegisterOnPipeServerMessageCallback(const aCallback: TPipeServerMessageCallback); stdcall; export;
-procedure RegisterOnPipeServerSentCallback(const aCallback: TPipeServerSentCallback); stdcall; export;
+procedure RegisterOnPipeServerConnectCallback(const aCallback: TPSConnectCb); stdcall; export;
+procedure RegisterOnPipeServerDisconnectCallback(const aCallback: TPSDisconnectCb); stdcall; export;
+procedure RegisterOnPipeServerErrorCallback(const aCallback: TPSErrorCb); stdcall; export;
+procedure RegisterOnPipeServerMessageCallback(const aCallback: TPSMessageCb); stdcall; export;
+procedure RegisterOnPipeServerSentCallback(const aCallback: TPSSentCb); stdcall; export;
 { Declare Pipe Client Procedures }
 procedure PipeClientInitialize; stdcall; export;
 procedure PipeClientDestroy; stdcall; export;
 function PipeClientConnect: WordBool; stdcall; export;
-function PipeClientConnectNamed(aPipeName: PChar): WordBool; stdcall; export;
-function PipeClientConnectRemote(aServerName: PChar): WordBool; stdcall; export;
-function PipeClientConnectRemoteNamed(aServerName, aPipeName: PChar): WordBool; stdcall; export;
-function PipeClientSend(aMsg: PChar): WordBool; stdcall; export;
+function PipeClientConnectNamed(aPipeName: PWideChar): WordBool; stdcall; export;
+function PipeClientConnectRemote(aServerName: PWideChar): WordBool; stdcall; export;
+function PipeClientConnectRemoteNamed(aServerName, aPipeName: PWideChar): WordBool; stdcall; export;
+function PipeClientSend(aMsg: PWideChar): WordBool; stdcall; export;
 procedure PipeClientDisconnect; stdcall; export;
 function PipeClientGetPipeId: Cardinal; stdcall; export;
 { Declare Pipe Client Callback Registration Procedures }
-procedure RegisterOnPipeClientDisconnectCallback(const aCallback: TPipeClientDisconnectCallback); stdcall; export;
-procedure RegisterOnPipeClientErrorCallback(const aCallback: TPipeClientErrorCallback); stdcall; export;
-procedure RegisterOnPipeClientMessageCallback(const aCallback: TPipeClientMessageCallback); stdcall; export;
-procedure RegisterOnPipeClientSentCallback(const aCallback: TPipeClientSentCallback); stdcall; export;
+procedure RegisterOnPipeClientDisconnectCallback(const aCallback: TPCDisconnectCb); stdcall; export;
+procedure RegisterOnPipeClientErrorCallback(const aCallback: TPCErrorCb); stdcall; export;
+procedure RegisterOnPipeClientMessageCallback(const aCallback: TPCMessageCb); stdcall; export;
+procedure RegisterOnPipeClientSentCallback(const aCallback: TPCSentCb); stdcall; export;
 
 exports
   { Declare Pipe Server Procedures }
@@ -89,9 +89,9 @@ begin
   Result := WordBool(gServerPipe.Start);
 end;
 
-function PipeServerStartNamed(aPipeName: PChar): WordBool; stdcall; export;
+function PipeServerStartNamed(aPipeName: PWideChar): WordBool; stdcall; export;
 begin
-  Result := WordBool(gServerPipe.Start(StrPas(aPipeName)));
+  Result := WordBool(gServerPipe.Start(aPipeName));
 end;
 
 procedure PipeServerStop; stdcall; export;
@@ -99,12 +99,12 @@ begin
   gServerPipe.Stop;
 end;
 
-function PipeServerBroadcast(aMsg: PChar): WordBool; stdcall; export;
+function PipeServerBroadcast(aMsg: PWideChar): WordBool; stdcall; export;
 begin
   Result := WordBool(gServerPipe.Broadcast(aMsg));
 end;
 
-function PipeServerSend(aPipe: Cardinal; aMsg: PChar): WordBool; stdcall; export;
+function PipeServerSend(aPipe: Cardinal; aMsg: PWideChar): WordBool; stdcall; export;
 begin
   Result := WordBool(gServerPipe.Send(HPIPE(aPipe), aMsg));
 end;
@@ -120,27 +120,27 @@ begin
 end;
 
 { Declare Pipe Server Callback Registration Procedures }
-procedure RegisterOnPipeServerConnectCallback(const aCallback: TPipeServerConnectCallback); stdcall; export;
+procedure RegisterOnPipeServerConnectCallback(const aCallback: TPSConnectCb); stdcall; export;
 begin
   gServerPipe.OnPipeServerConnectCallback := aCallback;
 end;
 
-procedure RegisterOnPipeServerDisconnectCallback(const aCallback: TPipeServerDisconnectCallback); stdcall; export;
+procedure RegisterOnPipeServerDisconnectCallback(const aCallback: TPSDisconnectCb); stdcall; export;
 begin
   gServerPipe.OnPipeServerDisconnectCallback := aCallback;
 end;
 
-procedure RegisterOnPipeServerErrorCallback(const aCallback: TPipeServerErrorCallback); stdcall; export;
+procedure RegisterOnPipeServerErrorCallback(const aCallback: TPSErrorCb); stdcall; export;
 begin
   gServerPipe.OnPipeServerErrorCallback := aCallback;
 end;
 
-procedure RegisterOnPipeServerMessageCallback(const aCallback: TPipeServerMessageCallback); stdcall; export;
+procedure RegisterOnPipeServerMessageCallback(const aCallback: TPSMessageCb); stdcall; export;
 begin
   gServerPipe.OnPipeServerMessageCallback := aCallback;
 end;
 
-procedure RegisterOnPipeServerSentCallback(const aCallback: TPipeServerSentCallback); stdcall; export;
+procedure RegisterOnPipeServerSentCallback(const aCallback: TPSSentCb); stdcall; export;
 begin
   gServerPipe.OnPipeServerSentCallback := aCallback;
 end;
@@ -161,22 +161,22 @@ begin
   Result := WordBool(gClientPipe.Connect);
 end;
 
-function PipeClientConnectNamed(aPipeName: PChar): WordBool; stdcall; export;
+function PipeClientConnectNamed(aPipeName: PWideChar): WordBool; stdcall; export;
 begin
-  Result := WordBool(gClientPipe.Connect(StrPas(aPipeName)));
+  Result := WordBool(gClientPipe.Connect(aPipeName));
 end;
 
-function PipeClientConnectRemote(aServerName: PChar): WordBool; stdcall; export;
+function PipeClientConnectRemote(aServerName: PWideChar): WordBool; stdcall; export;
 begin
-  Result := WordBool(gClientPipe.ConnectRemote(StrPas(aServerName)));
+  Result := WordBool(gClientPipe.ConnectRemote(aServerName));
 end;
 
-function PipeClientConnectRemoteNamed(aServerName, aPipeName: PChar): WordBool; stdcall; export;
+function PipeClientConnectRemoteNamed(aServerName, aPipeName: PWideChar): WordBool; stdcall; export;
 begin
-  Result := WordBool(gClientPipe.ConnectRemote(StrPas(aServerName), string(aPipeName)));
+  Result := WordBool(gClientPipe.ConnectRemote(aServerName, aPipeName));
 end;
 
-function PipeClientSend(aMsg: PChar): WordBool; stdcall; export;
+function PipeClientSend(aMsg: PWideChar): WordBool; stdcall; export;
 begin
   Result := WordBool(gClientPipe.Send(aMsg));
 end;
@@ -192,22 +192,22 @@ begin
 end;
 
 { Declare Pipe Server Callback Registration Procedures }
-procedure RegisterOnPipeClientDisconnectCallback(const aCallback: TPipeClientDisconnectCallback); stdcall; export;
+procedure RegisterOnPipeClientDisconnectCallback(const aCallback: TPCDisconnectCb); stdcall; export;
 begin
   gClientPipe.OnPipeClientDisconnectCallback := aCallback;
 end;
 
-procedure RegisterOnPipeClientErrorCallback(const aCallback: TPipeClientErrorCallback); stdcall; export;
+procedure RegisterOnPipeClientErrorCallback(const aCallback: TPCErrorCb); stdcall; export;
 begin
   gClientPipe.OnPipeClientErrorCallback := aCallback;
 end;
 
-procedure RegisterOnPipeClientMessageCallback(const aCallback: TPipeClientMessageCallback); stdcall; export;
+procedure RegisterOnPipeClientMessageCallback(const aCallback: TPCMessageCb); stdcall; export;
 begin
   gClientPipe.OnPipeClientMessageCallback := aCallback;
 end;
 
-procedure RegisterOnPipeClientSentCallback(const aCallback: TPipeClientSentCallback); stdcall; export;
+procedure RegisterOnPipeClientSentCallback(const aCallback: TPCSentCb); stdcall; export;
 begin
   gClientPipe.OnPipeClientSentCallback := aCallback;
 end;
