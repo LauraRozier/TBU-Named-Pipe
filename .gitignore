@@ -71,3 +71,5 @@ __recovery/
 /_examples/C#/Client/obj
 /_examples/C#/Server/obj
 /_examples/C#/Server/bin
+/_examples/Delphi/Client/Win32
+/_examples/Delphi/Server/Win32
