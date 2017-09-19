@@ -24,11 +24,12 @@ namespace Server
         {
             SetButtons();
             PipeServer.PipeServerInitialize();
-            PipeServer.RegisterOnPipeServerConnectCallback(OnConnect);
-            PipeServer.RegisterOnPipeServerDisconnectCallback(OnDisconnect);
-            PipeServer.RegisterOnPipeServerErrorCallback(OnError);
-            PipeServer.RegisterOnPipeServerMessageCallback(OnMessage);
-            PipeServer.RegisterOnPipeServerSentCallback(OnSent);
+            // Register our method delegates as callbacks
+            PipeServer.RegisterOnConnectCallback(OnConnect);
+            PipeServer.RegisterOnDisconnectCallback(OnDisconnect);
+            PipeServer.RegisterOnErrorCallback(OnError);
+            PipeServer.RegisterOnMessageCallback(OnMessage);
+            PipeServer.RegisterOnSentCallback(OnSent);
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -39,7 +40,12 @@ namespace Server
         private void Button2_Click(object sender, EventArgs e)
         {
             connected = PipeServer.PipeServerStart();
-            textBox2.AppendText("<< Pipe server started." + PipeUtils.sLineBreak);
+
+            if (connected)
+                textBox2.AppendText("<< Pipe server started." + PipeUtils.sLineBreak);
+            else
+                textBox2.AppendText("<< Unable to start the pipe server." + PipeUtils.sLineBreak);
+
             SetButtons();
         }
 
@@ -61,28 +67,28 @@ namespace Server
             textBox1.Text = string.Empty;
         }
 
-        public void OnConnect(UInt32 aPipe)
+        public void OnConnect(IntPtr self, UInt32 aPipe)
         {
             textBox2.AppendText(string.Format(">> New pipe ({0}) connected.", aPipe) + PipeUtils.sLineBreak);
         }
 
-        public void OnDisconnect(UInt32 aPipe)
+        public void OnDisconnect(IntPtr self, UInt32 aPipe)
         {
             textBox2.AppendText(string.Format(">> Pipe ({0}) disconnected.", aPipe) + PipeUtils.sLineBreak);
         }
 
-        public void OnError(UInt32 aPipe, SByte aPipeContext, Int32 aErrorCode)
+        public void OnError(IntPtr self, UInt32 aPipe, SByte aPipeContext, Int32 aErrorCode)
         {
             textBox2.AppendText(string.Format(">> Pipe ({0}) generated error ({1}) in the {2} context.",
                                               aPipe, aErrorCode, PipeUtils.PipeContextToString(aPipeContext)) + PipeUtils.sLineBreak);
         }
         
-        public void OnMessage(UInt32 aPipe, string aMsg)
+        public void OnMessage(IntPtr self, UInt32 aPipe, string aMsg)
         {
             textBox2.AppendText(string.Format(">> Pipe ({0}) sent a message: {1}", aPipe, aMsg) + PipeUtils.sLineBreak);
         }
 
-        public void OnSent(UInt32 aPipe, UInt32 aSize)
+        public void OnSent(IntPtr self, UInt32 aPipe, UInt32 aSize)
         {
             textBox2.AppendText(string.Format(">> Pipe ({0}) received our message with a length of ({1}).", aPipe, aSize) + PipeUtils.sLineBreak);
         }

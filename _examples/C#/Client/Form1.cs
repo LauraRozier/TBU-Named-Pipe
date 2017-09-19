@@ -24,10 +24,11 @@ namespace Client
         {
             SetButtons();
             PipeClient.PipeClientInitialize();
-            PipeClient.RegisterOnPipeClientDisconnectCallback(OnDisconnect);
-            PipeClient.RegisterOnPipeClientErrorCallback(OnError);
-            PipeClient.RegisterOnPipeClientMessageCallback(OnMessage);
-            PipeClient.RegisterOnPipeClientSentCallback(OnSent);
+            // Register our method delegates as callbacks
+            PipeClient.RegisterOnDisconnectCallback(OnDisconnect);
+            PipeClient.RegisterOnErrorCallback(OnError);
+            PipeClient.RegisterOnMessageCallback(OnMessage);
+            PipeClient.RegisterOnSentCallback(OnSent);
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -65,25 +66,25 @@ namespace Client
             textBox1.Text = string.Empty;
         }
 
-        public void OnDisconnect(UInt32 aPipe)
+        public void OnDisconnect(IntPtr self, UInt32 aPipe)
         {
             textBox2.AppendText(string.Format(">> Pipe ({0}) disconnected.", aPipe) + PipeUtils.sLineBreak);
             connected = false;
             SetButtons();
         }
 
-        public void OnError(UInt32 aPipe, SByte aPipeContext, Int32 aErrorCode)
+        public void OnError(IntPtr self, UInt32 aPipe, SByte aPipeContext, Int32 aErrorCode)
         {
             textBox2.AppendText(string.Format(">> Pipe ({0}) generated error ({1}) in the {2} context.",
                                               aPipe, aErrorCode, PipeUtils.PipeContextToString(aPipeContext)) + PipeUtils.sLineBreak);
         }
 
-        public void OnMessage(UInt32 aPipe, string aMsg)
+        public void OnMessage(IntPtr self, UInt32 aPipe, string aMsg)
         {
             textBox2.AppendText(string.Format(">> Pipe ({0}) sent a message: {1}", aPipe, aMsg) + PipeUtils.sLineBreak);
         }
 
-        public void OnSent(UInt32 aPipe, UInt32 aSize)
+        public void OnSent(IntPtr self, UInt32 aPipe, UInt32 aSize)
         {
             textBox2.AppendText(string.Format(">> Pipe ({0}) received our message with a length of ({1}).", aPipe, aSize) + PipeUtils.sLineBreak);
         }

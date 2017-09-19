@@ -81,6 +81,7 @@
   <ItemGroup>
     <Content Include="..\..\..\bin\Win32\TBUNamedPipe.dll">
       <Link>TBUNamedPipe.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
