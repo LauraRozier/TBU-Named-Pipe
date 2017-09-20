@@ -74,7 +74,7 @@
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppEnableHighDPI>true</AppEnableHighDPI>
-        <PostBuildEvent><![CDATA[copy "C:\Projects\SIS_Inventory\SIS MT Probe\TBU Named Pipe\bin\Win32\TBUNamedPipe.dll" $(OutputDir)\TBUNamedPipe.dll;
+        <PostBuildEvent><![CDATA[copy "..\..\..\bin\Win32\TBUNamedPipe.dll" "$(OutputDir)\TBUNamedPipe.dll";
 $(PostBuildEvent)]]></PostBuildEvent>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -132,7 +132,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy &quot;C:\Projects\SIS_Inventory\SIS MT Probe\TBU Named Pipe\bin\Win32\TBUNamedPipe.dll&quot; $(OutputDir)\TBUNamedPipe.dll;</PostBuildEvent>
+        <PostBuildEvent>copy &quot;..\..\..\bin\Win32\TBUNamedPipe.dll&quot; &quot;$(OutputDir)\TBUNamedPipe.dll&quot;;</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

@@ -53,7 +53,7 @@
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
         <SanitizedProjectName>Server</SanitizedProjectName>
-        <PostBuildEvent><![CDATA[copy "C:\Projects\SIS_Inventory\SIS MT Probe\TBU Named Pipe\bin\Win32\TBUNamedPipe.dll" $(OutputDir)\TBUNamedPipe.dll;
+        <PostBuildEvent><![CDATA[copy "..\..\..\bin\Win32\TBUNamedPipe.dll" "$(OutputDir)\TBUNamedPipe.dll";
 $(PostBuildEvent)]]></PostBuildEvent>
         <VerInfo_Locale>1043</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -134,7 +134,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy &quot;C:\Projects\SIS_Inventory\SIS MT Probe\TBU Named Pipe\bin\Win32\TBUNamedPipe.dll&quot; $(OutputDir)\TBUNamedPipe.dll;</PostBuildEvent>
+        <PostBuildEvent>copy &quot;..\..\..\bin\Win32\TBUNamedPipe.dll&quot; &quot;$(OutputDir)\TBUNamedPipe.dll&quot;;</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
@@ -142,7 +142,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy &quot;C:\Projects\SIS_Inventory\SIS MT Probe\TBU Named Pipe\bin\Win32\TBUNamedPipe.dll&quot; $(OutputDir)\TBUNamedPipe.dll;</PostBuildEvent>
+        <PostBuildEvent>copy &quot;..\..\..\bin\Win32\TBUNamedPipe.dll&quot; &quot;$(OutputDir)\TBUNamedPipe.dll&quot;;</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

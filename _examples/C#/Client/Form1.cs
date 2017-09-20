@@ -48,14 +48,6 @@ namespace Client
             SetButtons();
         }
 
-        private void Button3_Click(object sender, EventArgs e)
-        {
-            PipeClient.PipeClientDisconnect();
-            textBox2.AppendText("<< Disconnected from pipe server." + PipeUtils.sLineBreak);
-            connected = false;
-            SetButtons();
-        }
-
         private void Button2_Click(object sender, EventArgs e)
         {
             if (PipeClient.PipeClientSend(textBox1.Text))
@@ -64,6 +56,14 @@ namespace Client
                 textBox2.AppendText(string.Format("<< Failed to send message: {0}", textBox1.Text) + PipeUtils.sLineBreak);
 
             textBox1.Text = string.Empty;
+        }
+
+        private void Button3_Click(object sender, EventArgs e)
+        {
+            PipeClient.PipeClientDisconnect();
+            textBox2.AppendText("<< Disconnected from pipe server." + PipeUtils.sLineBreak);
+            connected = false;
+            SetButtons();
         }
 
         public void OnDisconnect(IntPtr self, UInt32 aPipe)

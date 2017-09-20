@@ -1,7 +1,7 @@
 object Form2: TForm2
   Left = 0
   Top = 0
-  Caption = 'Form2'
+  Caption = 'Delphi Client'
   ClientHeight = 350
   ClientWidth = 635
   Color = clBtnFace

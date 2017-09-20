@@ -57,7 +57,7 @@ end;
 procedure TForm2.Button2Click(Sender: TObject);
 begin
   PipeClientDisconnect;
-  Memo1.Lines.Add('<< Pipe client disconnected.');
+  Memo1.Lines.Add('<< Disconnected from pipe server.');
   FConnected := False;
   SetButtons;
 end;
@@ -94,6 +94,8 @@ end;
 procedure TForm2.OnDisconnect(aPipe: Cardinal); stdcall;
 begin
   Memo1.Lines.Add('>> Pipe (' + IntToStr(aPipe) + ') disconnected.');
+  FConnected := False;
+  SetButtons;
 end;
 
 procedure TForm2.OnError(aPipe: Cardinal; aPipeContext: ShortInt; aErrorCode: Integer); stdcall;
