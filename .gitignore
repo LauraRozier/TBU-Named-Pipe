@@ -73,3 +73,7 @@ __recovery/
 /_examples/C#/Server/bin
 /_examples/Delphi/Client/Win32
 /_examples/Delphi/Server/Win32
+/_examples/VC++/Debug
+/_examples/VC++/.vs
+/_examples/VC++/Client/Debug
+/_examples/VC++/Server/Debug
