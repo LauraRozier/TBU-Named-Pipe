@@ -7,6 +7,9 @@
 #include <string>
 #include <stdexcept>
 
+/// <summary>
+/// Named pipe classes for use with local and remote IPC
+/// </summary>
 namespace TBUNamedPipe
 {
 	using namespace System;
@@ -14,30 +17,95 @@ namespace TBUNamedPipe
 	using namespace std;
 
 #pragma region Server Delegates
+	/// <summary>
+    /// OnConnect callback delegate
+    /// </summary>
+    /// <param name="self">The sender</param>
+    /// <param name="aPipe">The pipe ID</param>
 	delegate void TPipeServerConnectCallback(void *self, unsigned int aPipe);
+	/// <summary>
+	/// OnDisconnect callback delegate
+	/// </summary>
+	/// <param name="self">The sender</param>
+	/// <param name="aPipe">The pipe ID</param>
 	delegate void TPipeServerDisconnectCallback(void *self, unsigned int aPipe);
+	/// <summary>
+	/// OnError callback delegate
+	/// </summary>
+	/// <param name="self">The sender</param>
+	/// <param name="aPipe">The pipe ID</param>
+	/// <param name="aPipeContext">The context of the error</param>
+	/// <param name="aErrorCode">The error code</param>
 	delegate void TPipeServerErrorCallback(void *self, unsigned int aPipe, SByte aPipeContext, int aErrorCode);
+	/// <summary>
+	/// OnMessage callback delegate
+	/// </summary>
+	/// <param name="self">The sender</param>
+	/// <param name="aPipe">The pipe ID</param>
+	/// <param name="aMsg">The message</param>
 	delegate void TPipeServerMessageCallback(void *self, unsigned int aPipe, wchar_t *aMsg);
+	/// <summary>
+	/// OnSent callback delegate
+	/// </summary>
+	/// <param name="self">The sender</param>
+	/// <param name="aPipe">The pipe ID</param>
+	/// <param name="aSize">The message size in bytes</param>
 	delegate void TPipeServerSentCallback(void *self, unsigned int aPipe, unsigned int aSize);
 #pragma endregion
 #pragma region Client Delegates
+	/// <summary>
+	/// OnDisconnect callback delegate
+	/// </summary>
+	/// <param name="self">The sender</param>
+	/// <param name="aPipe">The pipe ID</param>
 	delegate void TPipeClientDisconnectCallback(void *self, unsigned int aPipe);
+	/// <summary>
+	/// OnError callback delegate
+	/// </summary>
+	/// <param name="self">The sender</param>
+	/// <param name="aPipe">The pipe ID</param>
+	/// <param name="aPipeContext">The context of the error</param>
+	/// <param name="aErrorCode">The error code</param>
 	delegate void TPipeClientErrorCallback(void *self, unsigned int aPipe, SByte aPipeContext, int aErrorCode);
+	/// <summary>
+	/// OnMessage callback delegate
+	/// </summary>
+	/// <param name="self">The sender</param>
+	/// <param name="aPipe">The pipe ID</param>
+	/// <param name="aMsg">The message</param>
 	delegate void TPipeClientMessageCallback(void *self, unsigned int aPipe, wchar_t *aMsg);
+	/// <summary>
+	/// OnSent callback delegate
+	/// </summary>
+	/// <param name="self">The sender</param>
+	/// <param name="aPipe">The pipe ID</param>
+	/// <param name="aSize">The message size in bytes</param>
 	delegate void TPipeClientSentCallback(void *self, unsigned int aPipe, unsigned int aSize);
 #pragma endregion
 
 #pragma region Constants and Variables
+	/// <summary>
+	/// Windows linebreak constant
+	/// </summary>
 	static const wchar_t *sLineBreak = L"\r\n";
+	/// <summary>
+	/// DLL handle
+	/// </summary>
 	static HMODULE hModuleLibrary;
 #pragma endregion
 
 #pragma region Init/Destroy Library
+	/// <summary>
+	/// Load the DLL
+	/// </summary>
 	static void InitLibrary()
 	{
 		hModuleLibrary = LoadLibrary(TEXT("TBUNamedPipe.dll"));
 	}
 
+	/// <summary>
+	/// Free the DLL handle
+	/// </summary>
 	static void DestroyLibrary()
 	{
 		FreeLibrary(hModuleLibrary);
@@ -45,6 +113,11 @@ namespace TBUNamedPipe
 #pragma endregion
 
 #pragma region Utilities
+	/// <summary>
+	/// Translates a context ID to it's string value
+	/// </summary>
+	/// <param name="aPipeContext">The context ID</param>
+	/// <returns>The name of the context</returns>
 	static wchar_t *PipeContextToString(SByte aPipeContext)
 	{
 		switch (aPipeContext)
@@ -59,6 +132,9 @@ namespace TBUNamedPipe
 	}
 #pragma endregion
 
+	/// <summary>
+	/// The pipe server enables you to setup a pipe listner
+	/// </summary>
 	ref class PipeServer
 	{
 #pragma region Typedefs
@@ -83,15 +159,33 @@ namespace TBUNamedPipe
 
 #pragma region Variables
 		private:
+			/// <summary>
+			/// Holds the OnConnect callback to prevent GC collection
+			/// </summary>
 			static TPipeServerConnectCallback^ sccb;
+			/// <summary>
+			/// Holds the OnDisconnect callback to prevent GC collection
+			/// </summary>
 			static TPipeServerDisconnectCallback^ sdcb;
+			/// <summary>
+			/// Holds the OnError callback to prevent GC collection
+			/// </summary>
 			static TPipeServerErrorCallback^ secb;
+			/// <summary>
+			/// Holds the OnMessage callback to prevent GC collection
+			/// </summary>
 			static TPipeServerMessageCallback^ smcb;
+			/// <summary>
+			/// Holds the OnSent callback to prevent GC collection
+			/// </summary>
 			static TPipeServerSentCallback^ sscb;
 #pragma endregion
 
 #pragma region Server Methods
 		public:
+			/// <summary>
+			/// Initialize the pipe server class
+			/// </summary>
 			static void PipeServerInitialize()
 			{
 				assert(hModuleLibrary != NULL);
@@ -101,6 +195,9 @@ namespace TBUNamedPipe
 				(*pPipeServerInitialize)();
 			}
 
+			/// <summary>
+			/// Destroy the pipe server class
+			/// </summary>
 			static void PipeServerDestroy()
 			{
 				assert(hModuleLibrary != NULL);
@@ -110,6 +207,10 @@ namespace TBUNamedPipe
 				(*pPipeServerDestroy)();
 			}
 
+			/// <summary>
+			/// Start the pipe server listener thread
+			/// </summary>
+			/// <returns>True on success</returns>
 			static bool PipeServerStart()
 			{
 				assert(hModuleLibrary != NULL);
@@ -119,6 +220,11 @@ namespace TBUNamedPipe
 				return (*pPipeServerStart)();
 			}
 
+			/// <summary>
+			/// Start the pipe server listener thread
+			/// </summary>
+			/// <param name="aPipeName">The pipe name</param>
+			/// <returns>True on success</returns>
 			static bool PipeServerStartNamed(const wchar_t *aPipeName)
 			{
 				assert(hModuleLibrary != NULL);
@@ -128,6 +234,9 @@ namespace TBUNamedPipe
 				return (*pPipeServerStartNamed)(aPipeName);
 			}
 
+			/// <summary>
+			/// Stop the pipe server listener thread
+			/// </summary>
 			static void PipeServerStop()
 			{
 				assert(hModuleLibrary != NULL);
@@ -137,6 +246,11 @@ namespace TBUNamedPipe
 				(*pPipeServerStop)();
 			}
 
+			/// <summary>
+			/// Broadcast a message to all connected pipes
+			/// </summary>
+			/// <param name="aMsg">The message</param>
+			/// <returns>True on success</returns>
 			static bool PipeServerBroadcast(const wchar_t *aMsg)
 			{
 				assert(hModuleLibrary != NULL);
@@ -146,6 +260,12 @@ namespace TBUNamedPipe
 				return (*pPipeServerBroadcast)(aMsg);
 			}
 
+			/// <summary>
+			/// Send a message to the specified pipe
+			/// </summary>
+			/// <param name="aPipe">Pipe ID</param>
+			/// <param name="aMsg">The message</param>
+			/// <returns>True on success</returns>
 			static bool PipeServerSend(unsigned int aPipe, const wchar_t *aMsg)
 			{
 				assert(hModuleLibrary != NULL);
@@ -155,6 +275,11 @@ namespace TBUNamedPipe
 				return (*pPipeServerSend)(aPipe, aMsg);
 			}
 
+			/// <summary>
+			/// Disconnect a specific pipe ( Use 0 [zero] for all connected pipes )
+			/// </summary>
+			/// <param name="aPipe">Pipe ID</param>
+			/// <returns>True on success</returns>
 			static bool PipeServerDisconnect(unsigned int aPipe)
 			{
 				assert(hModuleLibrary != NULL);
@@ -164,6 +289,10 @@ namespace TBUNamedPipe
 				return (*pPipeServerDisconnect)(aPipe);
 			}
 
+			/// <summary>
+			/// Retrieve the amount of connected pipes
+			/// </summary>
+			/// <returns>The amount of pipes that are currently connected</returns>
 			static unsigned int PipeServerGetClientCount()
 			{
 				assert(hModuleLibrary != NULL);
@@ -176,6 +305,10 @@ namespace TBUNamedPipe
 
 #pragma region Server Callback Registration Procedures
 		public:
+			/// <summary>
+			/// Register the OnConnect callback method
+			/// </summary>
+			/// <param name="aCallback">The callback method</param>
 			static void RegisterOnConnectCallback(TPipeServerConnectCallback^ aCallback)
 			{
 				assert(hModuleLibrary != NULL);
@@ -190,6 +323,10 @@ namespace TBUNamedPipe
 				(*pRegisterOnPipeServerConnectCallback)(sccb, NULL);
 			}
 
+			/// <summary>
+			/// Register the OnDisconnect callback method
+			/// </summary>
+			/// <param name="aCallback">The callback method</param>
 			static void RegisterOnDisconnectCallback(TPipeServerDisconnectCallback^ aCallback)
 			{
 				assert(hModuleLibrary != NULL);
@@ -204,6 +341,10 @@ namespace TBUNamedPipe
 				(*pRegisterOnPipeServerDisconnectCallback)(sdcb, NULL);
 			}
 
+			/// <summary>
+			/// Register the OnError callback method
+			/// </summary>
+			/// <param name="aCallback">The callback method</param>
 			static void RegisterOnErrorCallback(TPipeServerErrorCallback^ aCallback)
 			{
 				assert(hModuleLibrary != NULL);
@@ -218,6 +359,10 @@ namespace TBUNamedPipe
 				(*pRegisterOnPipeServerErrorCallback)(secb, NULL);
 			}
 
+			/// <summary>
+			/// Register the OnMessage callback method
+			/// </summary>
+			/// <param name="aCallback">The callback method</param>
 			static void RegisterOnMessageCallback(TPipeServerMessageCallback^ aCallback)
 			{
 				assert(hModuleLibrary != NULL);
@@ -232,6 +377,10 @@ namespace TBUNamedPipe
 				(*pRegisterOnPipeServerMessageCallback)(smcb, NULL);
 			}
 
+			/// <summary>
+			/// Register the OnSent callback method
+			/// </summary>
+			/// <param name="aCallback">The callback method</param>
 			static void RegisterOnSentCallback(TPipeServerSentCallback^ aCallback)
 			{
 				assert(hModuleLibrary != NULL);
@@ -248,6 +397,9 @@ namespace TBUNamedPipe
 #pragma endregion
 	};
 
+	/// <summary>
+	/// The pipe client enables you to connect to a pipe server
+	/// </summary>
 	ref class PipeClient
 	{
 #pragma region Typedefs
@@ -271,14 +423,29 @@ namespace TBUNamedPipe
 
 #pragma region Variables
 	private:
+		/// <summary>
+		/// Holds the OnDisconnect callback to prevent GC collection
+		/// </summary>
 		static TPipeClientDisconnectCallback^ cdcb;
+		/// <summary>
+		/// Holds the OnError callback to prevent GC collection
+		/// </summary>
 		static TPipeClientErrorCallback^ cecb;
+		/// <summary>
+		/// Holds the OnMessage callback to prevent GC collection
+		/// </summary>
 		static TPipeClientMessageCallback^ cmcb;
+		/// <summary>
+		/// Holds the OnSent callback to prevent GC collection
+		/// </summary>
 		static TPipeClientSentCallback^ cscb;
 #pragma endregion
 
 #pragma region Client Methods
 	public:
+		/// <summary>
+		/// Initialize the pipe client class
+		/// </summary>
 		static void PipeClientInitialize()
 		{
 			assert(hModuleLibrary != NULL);
@@ -288,6 +455,9 @@ namespace TBUNamedPipe
 			(*pPipeClientInitialize)();
 		}
 
+		/// <summary>
+		/// Destroy the pipe client class
+		/// </summary>
 		static void PipeClientDestroy()
 		{
 			assert(hModuleLibrary != NULL);
@@ -297,6 +467,10 @@ namespace TBUNamedPipe
 			(*pPipeClientDestroy)();
 		}
 
+		/// <summary>
+		/// Connect to the local pipe server
+		/// </summary>
+		/// <returns>True on success</returns>
 		static bool PipeClientConnect()
 		{
 			assert(hModuleLibrary != NULL);
@@ -306,6 +480,11 @@ namespace TBUNamedPipe
 			return (*pPipeClientConnect)();
 		}
 
+		/// <summary>
+		/// Connect to the local pipe server
+		/// </summary>
+		/// <param name="aPipeName">The pipe name</param>
+		/// <returns>True on success</returns>
 		static bool PipeClientConnectNamed(const wchar_t *aPipeName)
 		{
 			assert(hModuleLibrary != NULL);
@@ -315,6 +494,11 @@ namespace TBUNamedPipe
 			return (*pPipeClientConnectNamed)(aPipeName);
 		}
 
+		/// <summary>
+		/// Connect to a remote pipe server
+		/// </summary>
+		/// <param name="aServerName">The server name ( Hostname )</param>
+		/// <returns>True on success</returns>
 		static bool PipeClientConnectRemote(const wchar_t *aServerName)
 		{
 			assert(hModuleLibrary != NULL);
@@ -324,6 +508,12 @@ namespace TBUNamedPipe
 			return (*pPipeClientConnectRemote)(aServerName);
 		}
 
+		/// <summary>
+		/// Connect to a remote pipe server
+		/// </summary>
+		/// <param name="aServerName">The server name ( Hostname )</param>
+		/// <param name="aPipeName">The pipe name</param>
+		/// <returns>True on success</returns>
 		static bool PipeClientConnectRemoteNamed(const wchar_t *aServerName, const wchar_t *aPipeName)
 		{
 			assert(hModuleLibrary != NULL);
@@ -333,6 +523,11 @@ namespace TBUNamedPipe
 			return (*pPipeClientConnectRemoteNamed)(aServerName, aPipeName);
 		}
 
+		/// <summary>
+		/// Send a message to the pipe server
+		/// </summary>
+		/// <param name="aMsg">The message</param>
+		/// <returns>True on success</returns>
 		static bool PipeClientSend(const wchar_t *aMsg)
 		{
 			assert(hModuleLibrary != NULL);
@@ -342,6 +537,9 @@ namespace TBUNamedPipe
 			return (*pPipeClientSend)(aMsg);
 		}
 
+		/// <summary>
+		/// Disconnect from the pipe server
+		/// </summary>
 		static void PipeClientDisconnect()
 		{
 			assert(hModuleLibrary != NULL);
@@ -351,6 +549,10 @@ namespace TBUNamedPipe
 			return (*pPipeClientDisconnect)();
 		}
 
+		/// <summary>
+		/// Get the ID of the current pipe
+		/// </summary>
+		/// <returns>The pipe ID</returns>
 		static unsigned int PipeClientGetPipeId()
 		{
 			assert(hModuleLibrary != NULL);
@@ -363,6 +565,10 @@ namespace TBUNamedPipe
 
 #pragma region Client Callback Registration Procedures
 	public:
+		/// <summary>
+		/// Register the OnDisconnect callback method
+		/// </summary>
+		/// <param name="aCallback">The callback method</param>
 		static void RegisterOnDisconnectCallback(TPipeClientDisconnectCallback^ aCallback)
 		{
 			assert(hModuleLibrary != NULL);
@@ -377,6 +583,10 @@ namespace TBUNamedPipe
 			(*pRegisterOnPipeClientDisconnectCallback)(cdcb, NULL);
 		}
 
+		/// <summary>
+		/// Register the OnError callback method
+		/// </summary>
+		/// <param name="aCallback">The callback method</param>
 		static void RegisterOnErrorCallback(TPipeClientErrorCallback^ aCallback)
 		{
 			assert(hModuleLibrary != NULL);
@@ -391,6 +601,10 @@ namespace TBUNamedPipe
 			(*pRegisterOnPipeClientErrorCallback)(cecb, NULL);
 		}
 
+		/// <summary>
+		/// Register the OnMessage callback method
+		/// </summary>
+		/// <param name="aCallback">The callback method</param>
 		static void RegisterOnMessageCallback(TPipeClientMessageCallback^ aCallback)
 		{
 			assert(hModuleLibrary != NULL);
@@ -405,6 +619,10 @@ namespace TBUNamedPipe
 			(*pRegisterOnPipeClientMessageCallback)(cmcb, NULL);
 		}
 
+		/// <summary>
+		/// Register the OnSent callback method
+		/// </summary>
+		/// <param name="aCallback">The callback method</param>
 		static void RegisterOnSentCallback(TPipeClientSentCallback^ aCallback)
 		{
 			assert(hModuleLibrary != NULL);
