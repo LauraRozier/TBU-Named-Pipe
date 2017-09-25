@@ -3,7 +3,9 @@ unit TBUNP_ServerPipe;
 interface
 
 uses
-  SysUtils, Classes, Pipes;
+  SysUtils, Classes,
+  Pipes,
+  TBUNP_Utils;
 
 type
   TPSConnectCb    = procedure(aPipe: Cardinal) of object; stdcall;
@@ -79,7 +81,7 @@ begin
   Result := FPipeServer.Active;
 
   if not Result then
-    FreeAndNil(FPipeServer);
+    FreeThenNil(FPipeServer);
 end;
 
 function TTBUNP_ServerPipe.Start(aPipeName: PWideChar): Boolean;
@@ -104,7 +106,7 @@ begin
   Result := FPipeServer.Active;
 
   if not Result then
-    FreeAndNil(FPipeServer);
+    FreeThenNil(FPipeServer);
 end;
 
 procedure TTBUNP_ServerPipe.Stop;
@@ -114,7 +116,7 @@ begin
 
   FPipeServer.Active := False;
   sleep(100);
-  FreeAndNil(FPipeServer);
+  FreeThenNil(FPipeServer);
 end;
 
 function TTBUNP_ServerPipe.Broadcast(aMsg: PWideChar): Boolean;

@@ -1967,11 +1967,13 @@ begin
 
     // Resource protection
     try
-        // Notify of disconnect
-        if (not(csDestroying in ComponentState) and Assigned(FOPD)) then
-            FOPD(Self, FPipe);
         // Clear the write queue
         FWriteQueue.Clear;
+
+        // Notify of disconnect
+        if (not(csDestroying in ComponentState) and Assigned(FOPD) and
+            not FDisconnecting) then
+            FOPD(Self, FPipe);
     finally
         // Invalidate handle
         FPipe := INVALID_HANDLE_VALUE;

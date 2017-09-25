@@ -3,7 +3,8 @@ unit TBUNP_Exports;
 interface
 
 uses
-  SysUtils, Classes, Pipes,
+  SysUtils, Classes,
+  Pipes,
   TBUNP_ServerPipe, TBUNP_ClientPipe;
 
 { Declare Pipe Server Procedures }

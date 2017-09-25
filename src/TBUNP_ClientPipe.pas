@@ -3,9 +3,12 @@ unit TBUNP_ClientPipe;
 interface
 
 uses
-  SysUtils, Classes, Pipes;
+  SysUtils, Classes, ExtCtrls,
+  Pipes,
+  TBUNP_Utils;
 
 type
+  TOwnState       = (ownsConnected, ownsDisconnected);
   TPCDisconnectCb = procedure(aPipe: Cardinal) of object; stdcall;
   TPCErrorCb      = procedure(aPipe: Cardinal;
                               aPipeContext: ShortInt;
@@ -17,12 +20,15 @@ type
 
   TTBUNP_ClientPipe = class(TObject)
     private
-      FPipeClient: TPipeClient;
+      FPipeClient:   TPipeClient;
+      FOwnState:     TOwnState;
+      FCleanupTimer: TTimer;
       procedure OPCDCB(aSender: TObject; aPipe: HPIPE);
       procedure OPCECB(aSender: TObject; aPipe: HPIPE;
                        aPipeContext: TPipeContext; aErrorCode: Integer);
       procedure OPCMCB(aSender: TObject; aPipe: HPIPE; aStream: TStream);
       procedure OPCSCB(aSender: TObject; aPipe: HPIPE; aSize: Cardinal);
+      procedure FCleanupTimerTick(aSender: TObject);
     public
       OnPipeClientDisconnectCallback: TPCDisconnectCb;
       OnPipeClientErrorCallback:      TPCErrorCb;
@@ -46,18 +52,40 @@ implementation
 
 constructor TTBUNP_ClientPipe.Create;
 begin
-  //
+  FOwnState              := ownsDisconnected;
+
+  FCleanupTimer          := TTimer.Create(nil);
+  FCleanupTimer.Enabled  := False;
+  FCleanupTimer.Interval := 100;
+  FCleanupTimer.OnTimer  := FCleanupTimerTick;
 end;
 
 destructor TTBUNP_ClientPipe.Destroy;
 begin
   // Call local method Disconnect, as it disconnects and frees the resource
   Disconnect;
+  FreeThenNil(FCleanupTimer);
+  inherited;
+end;
+
+procedure TTBUNP_ClientPipe.FCleanupTimerTick(aSender: TObject);
+begin
+  if FPipeClient <> nil then
+  begin
+    try
+      FreeThenNil(FPipeClient);
+      // Disable the timer after successfull cleanup
+      FCleanupTimer.Enabled := False;
+      FOwnState             := ownsDisconnected;
+    except
+      Exit;
+    end;
+  end;
 end;
 
 function TTBUNP_ClientPipe.Connect: Boolean;
 begin
-  if FPipeClient <> nil then
+  if FOwnState = ownsConnected then
   begin
     Result := False;
     Exit;
@@ -69,7 +97,8 @@ begin
   FPipeClient.OnPipeMessage    := OPCMCB;
   FPipeClient.OnPipeSent       := OPCSCB;
 
-  Result := FPipeClient.Connect(2000, True);
+  Result    := FPipeClient.Connect(2000, True);
+  FOwnState := ownsConnected;
 
   // We must manually cleanup to prevent unexpected behaviour
   if not Result then
@@ -78,7 +107,7 @@ end;
 
 function TTBUNP_ClientPipe.Connect(aPipeName: PWideChar): Boolean;
 begin
-  if FPipeClient <> nil then
+  if FOwnState = ownsConnected then
   begin
     Result := False;
     Exit;
@@ -91,7 +120,8 @@ begin
   FPipeClient.OnPipeMessage    := OPCMCB;
   FPipeClient.OnPipeSent       := OPCSCB;
 
-  Result := FPipeClient.Connect(2000, True);
+  Result    := FPipeClient.Connect(2000, True);
+  FOwnState := ownsConnected;
 
   // We must manually cleanup to prevent unexpected behaviour
   if not Result then
@@ -100,7 +130,7 @@ end;
 
 function TTBUNP_ClientPipe.ConnectRemote(aServername: PWideChar): Boolean;
 begin
-  if FPipeClient <> nil then
+  if FOwnState = ownsConnected then
   begin
     Result := False;
     Exit;
@@ -113,7 +143,8 @@ begin
   FPipeClient.OnPipeMessage    := OPCMCB;
   FPipeClient.OnPipeSent       := OPCSCB;
 
-  Result := FPipeClient.Connect(2000, True);
+  Result    := FPipeClient.Connect(2000, True);
+  FOwnState := ownsConnected;
 
   // We must manually cleanup to prevent unexpected behaviour
   if not Result then
@@ -122,7 +153,7 @@ end;
 
 function TTBUNP_ClientPipe.ConnectRemote(aServername, aPipeName: PWideChar): Boolean;
 begin
-  if FPipeClient <> nil then
+  if FOwnState = ownsConnected then
   begin
     Result := False;
     Exit;
@@ -136,7 +167,8 @@ begin
   FPipeClient.OnPipeMessage    := OPCMCB;
   FPipeClient.OnPipeSent       := OPCSCB;
 
-  Result := FPipeClient.Connect(2000, True);
+  Result    := FPipeClient.Connect(2000, True);
+  FOwnState := ownsConnected;
 
   // We must manually cleanup to prevent unexpected behaviour
   if not Result then
@@ -145,16 +177,18 @@ end;
 
 procedure TTBUNP_ClientPipe.Disconnect;
 begin
-  if FPipeClient = nil then
-    Exit;
+  if FOwnState = ownsConnected then
+    FPipeClient.Disconnect;
 
-  FPipeClient.Disconnect;
-  FreeAndNil(FPipeClient);
+  while FPipeClient <> nil do
+    FreeThenNil(FPipeClient);
+
+  FOwnState := ownsDisconnected;
 end;
 
 function TTBUNP_ClientPipe.Send(aMsg: PWideChar): Boolean;
 begin
-  if (FPipeClient = nil) or
+  if (FOwnState = ownsDisconnected) or
      (not FPipeClient.Connected) or
      (Length(aMsg) <= 0) then
   begin
@@ -167,7 +201,8 @@ end;
 
 function TTBUNP_ClientPipe.GetPipeId: HPIPE;
 begin
-  if (FPipeClient = nil) or (not FPipeClient.Connected) then
+  if (FOwnState = ownsDisconnected) or
+     (not FPipeClient.Connected) then
   begin
     Result := 0;
     Exit;
@@ -180,6 +215,8 @@ procedure TTBUNP_ClientPipe.OPCDCB(aSender: TObject; aPipe: HPIPE);
 begin
   if Assigned(OnPipeClientDisconnectCallback) then
     OnPipeClientDisconnectCallback(Cardinal(aPipe));
+
+  FCleanupTimer.Enabled := True;
 end;
 
 procedure TTBUNP_ClientPipe.OPCECB(aSender: TObject; aPipe: HPIPE;
